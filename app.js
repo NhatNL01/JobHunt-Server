@@ -1,67 +1,124 @@
 const express = require('express');
-const helmet = require('helmet');
-const xss = require('xss-clean');
-const mongoSanitize = require('express-mongo-sanitize');
-const compression = require('compression');
-const cors = require('cors');
-const passport = require('passport');
-const httpStatus = require('http-status');
-const config = require('./config/config');
-const morgan = require('./config/morgan');
-const { jwtStrategy } = require('./config/passport');
-const { authLimiter } = require('./middlewares/rateLimiter');
-const routes = require('./routes/v1');
-const { errorConverter, errorHandler } = require('./middlewares/error');
-const ApiError = require('./utils/ApiError');
-
 const app = express();
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const passport = require('passport');
+const cookieSession = require('cookie-session');
+const path = require('path');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+require('dotenv').config();
 
-if (config.env !== 'test') {
-  app.use(morgan.successHandler);
-  app.use(morgan.errorHandler);
-}
+const jobsRoutes = require('./routes/jobs');
+const companiesRoutes = require('./routes/companies');
+const cvsRoutes = require('./routes/cvs');
+const postsRoutes = require('./routes/posts');
+const usersRoutes = require('./routes/users');
+const commentsRoutes = require('./routes/comments');
+const tagsRoutes = require('./routes/tags');
+const applicationsRoutes = require('./routes/applications');
+const HttpError = require('./models/http-error');
+const { socketHandlers } = require('./utils/socket');
 
-// set security HTTP headers
-app.use(helmet());
+const {
+  // DB_USER,
+  // DB_PASSWORD,
+  // DB_NAME,
+  MONGO_URI,
+  COOKIE_KEY,
+  PORT,
+  NODE_ENV,
+  CLIENT_URL,
+} = process.env;
 
-// parse json request body
-app.use(express.json());
+const httpServer = createServer(app);
 
-// parse urlencoded request body
-app.use(express.urlencoded({ extended: true }));
+app.set('trust proxy', 1);
 
-// sanitize request data
-app.use(xss());
-app.use(mongoSanitize());
+app.use(
+  cookieSession({
+    name: 'session',
+    keys: [COOKIE_KEY],
+    maxAge: 24 * 60 * 60 * 1000, // session will expire after 24 hours
+    secure: NODE_ENV === 'development' ? false : true,
+    sameSite: NODE_ENV === 'development' ? false : 'none',
+  })
+);
 
-// gzip compression
-app.use(compression());
+app.use(bodyParser.json());
 
-// enable cors
-app.use(cors());
-app.options('*', cors());
-
-// jwt authentication
 app.use(passport.initialize());
-passport.use('jwt', jwtStrategy);
+app.use(passport.session());
+require('./config/passport-twitter');
 
-// limit repeated failed requests to auth endpoints
-if (config.env === 'production') {
-  app.use('/v1/auth', authLimiter);
-}
+const io = new Server(httpServer, {
+  cors: {
+    origin: CLIENT_URL,
+    methods: ['GET', 'POST'],
+  },
+});
+socketHandlers(io);
 
-// v1 api routes
-app.use('/v1', routes);
+app.use(
+  cors({
+    origin: CLIENT_URL, // allow to server to accept request from different origin (client)
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // allow session cookie from browser to pass through
+  })
+);
 
-// send back a 404 error for any unknown api request
-app.use((req, res, next) => {
-  next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
+app.use('/api/posts', postsRoutes);
+
+app.use('/api/applications', applicationsRoutes);
+
+app.use('/api/companies', companiesRoutes);
+
+app.use('/api/cvs', cvsRoutes);
+
+app.use('/api/jobs', jobsRoutes);
+
+app.use('/api/users', usersRoutes);
+
+app.use('/api/comments', commentsRoutes);
+
+app.use('/api/tags', tagsRoutes);
+
+app.get('/', (req, res) => {
+  res.send('DEV.to is running');
 });
 
-// convert error to ApiError, if needed
-app.use(errorConverter);
+// app.use((req, res, next) => {
+//   throw new HttpError('Could not find the route', 404);
+// });
 
-// handle error
-app.use(errorHandler);
+app.use((error, req, res, next) => {
+  if (res.headerSent) {
+    //res already sent ? => don't send res, just forward the error
+    return next(error);
+  }
+  //else, send a res
+  res.status(error.code || 500);
+  res.json({
+    message: error.message || 'An unknown error occurred',
+  });
+});
 
-module.exports = app;
+mongoose
+  .connect(
+    MONGO_URI,
+    {
+      useUnifiedTopology: true,
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
+    }
+  )
+  .then(() => {
+    httpServer.listen(PORT || 5000, () => {
+      console.log('Starting server');
+    });
+  })
+  .catch((err) => {
+    console.log(err);
+  });

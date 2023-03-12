@@ -1,5 +1,5 @@
 {
-  "name": "JobHunt",
+  "name": "jobhunt-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
-  "author": "NhatNL01",
+  "author": "Eknoorpreet Singh",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.26.1",
