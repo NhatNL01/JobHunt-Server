@@ -2,7 +2,7 @@ const express = require("express");
 const { check } = require("express-validator");
 
 const tagsControllers = require("../controllers/tags");
-const checkAuth = require("../middleware/check-auth");
+const { checkAuth } = require("../middleware/check-auth");
 
 const router = express.Router();
 const {

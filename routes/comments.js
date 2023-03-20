@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { check } = require("express-validator");
-const checkAuth = require("../middleware/check-auth");
+const { checkAuth } = require("../middleware/check-auth");
 const commentsControllers = require("../controllers/comments");
 const {
   getCommentsByPostId,

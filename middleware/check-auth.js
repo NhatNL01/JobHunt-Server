@@ -3,8 +3,9 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const { JWT_KEY } = process.env;
 const HttpError = require('../models/http-error');
+const User = require("../models/user");
 
-module.exports = (req, res, next) => {
+exports.checkAuth = (req, res, next) => {
   if (req.method === 'OPTIONS') {
     return next(); //allow the request to continue
   }
@@ -26,4 +27,15 @@ module.exports = (req, res, next) => {
   } catch (err) {
     return next(new HttpError('Authentication failed!', 403));
   }
+};
+
+
+exports.authorize = (...roles) => {
+  return async (req, res, next) => {
+    let user = await User.findById(req.body.userId);
+    if (!roles.includes(user?.role)) {
+      return next(new HttpError('Authorization failed!', 403));
+    }
+    next();
+  };
 };

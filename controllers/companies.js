@@ -60,7 +60,6 @@ const createCompany = async (req, res, next) => {
   let user;
   try {
     user = await User.findById(author); //check if the user ID exists
-    console.log(user.company)
   } catch (err) {
     return next(new HttpError('Creating post failed, please try again', 500));
   }

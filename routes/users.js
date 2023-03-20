@@ -6,7 +6,7 @@ const usersControllers = require('../controllers/users');
 const notificationsControllers = require('../controllers/notifications');
 const postsControllers = require('../controllers/posts');
 const { fileUpload } = require('../middleware/file-upload');
-const checkAuth = require('../middleware/check-auth');
+const { checkAuth } = require('../middleware/check-auth');
 require('dotenv').config;
 const { CLIENT_URL } = process.env;
 
@@ -23,6 +23,7 @@ const {
   updateUser,
   followUser,
   unfollowUser,
+  registerRecruiter
 } = usersControllers;
 const { getAllNotifications } = notificationsControllers;
 const { getBookmarks } = postsControllers;
@@ -82,5 +83,7 @@ router.patch('/:userId', fileUpload.single('avatar'), updateUser);
 router.put('/follow', followUser);
 
 router.put('/unfollow', unfollowUser);
+
+router.patch('/:userId/registerRecruiter', registerRecruiter);
 
 module.exports = router;

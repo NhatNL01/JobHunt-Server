@@ -1,10 +1,10 @@
-const { v4: uuid } = require('uuid');
-const { validationResult } = require('express-validator');
-const mongoose = require('mongoose');
-const HttpError = require('../models/http-error');
-const Post = require('../models/post');
-const User = require('../models/user');
-const Tag = require('../models/tag');
+const { v4: uuid } = require("uuid");
+const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
+const HttpError = require("../models/http-error");
+const Post = require("../models/post");
+const User = require("../models/user");
+const Tag = require("../models/tag");
 
 const createTags = async (tags, post) => {
   for (const [i, tag] of tags.entries()) {
@@ -45,7 +45,7 @@ const getAllTags = async (req, res, next) => {
   try {
     tags = await Tag.find({});
   } catch (err) {
-    return next(new HttpError('Could not fetch tags, please try again', 500));
+    return next(new HttpError("Could not fetch tags, please try again", 500));
   }
   res.json({ tags: tags.map((tag) => tag.toObject({ getters: true })) });
 };
@@ -56,22 +56,22 @@ const getTagByName = async (req, res, next) => {
   try {
     tag = await Tag.findOne({ name: tagName })
       .populate({
-        path: 'posts',
+        path: "posts",
         populate: {
-          path: 'tags',
+          path: "tags",
         },
       })
       .populate({
-        path: 'posts',
+        path: "posts",
         populate: {
-          path: 'author',
+          path: "author",
         },
       });
   } catch (err) {
-    return next(new HttpError('Something went wrong with the server', 500));
+    return next(new HttpError("Something went wrong with the server", 500));
   }
   if (!tag) {
-    return next(new HttpError('Could not find the provided tag', 404));
+    return next(new HttpError("Could not find the provided tag", 404));
   }
   res.json({
     tag: tag.toObject({ getters: true }),
@@ -82,12 +82,12 @@ const getTagById = async (req, res, next) => {
   const { tagId } = req.params;
   let tag;
   try {
-    tag = await Tag.findById(tagId).populate('posts');
+    tag = await Tag.findById(tagId).populate("posts");
   } catch (err) {
-    return next(new HttpError('Something went wrong with the server', 500));
+    return next(new HttpError("Something went wrong with the server", 500));
   }
   if (!tag) {
-    return next(new HttpError('Could not find a tag for the provided ID', 404));
+    return next(new HttpError("Could not find a tag for the provided ID", 404));
   }
   res.json({
     tag: tag.toObject({ getters: true }),
@@ -100,10 +100,10 @@ const getTagsByUserId = async (req, res, next) => {
   try {
     tags = await Tag.find({ followers: userId });
   } catch (err) {
-    return next(new HttpError('Fetching tags failed. Please try again', 500));
+    return next(new HttpError("Fetching tags failed. Please try again", 500));
   }
   if (!tags || tags.length === 0) {
-    return next(new HttpError('Could not find tags for provided user ID', 404));
+    return next(new HttpError("Could not find tags for provided user ID", 404));
   }
   res.json({ tags: tags.map((tag) => tag.toObject({ getters: true })) });
 };
@@ -112,15 +112,20 @@ const getPostsForHomeTags = async (req, res, next) => {
   let tags;
   try {
     tags = await Tag.find({
-      $or: [{ name: 'news' }, { name: 'discuss' }, { name: 'webdev' }],
+      $or: [
+        { name: "news" },
+        { name: "discuss" },
+        { name: "webdev" },
+        { name: "job" },
+      ],
     })
-      .populate('posts')
+      .populate("posts")
       .limit(5);
   } catch (err) {
-    return next(new HttpError('Fetching tags failed. Please try again', 500));
+    return next(new HttpError("Fetching tags failed. Please try again", 500));
   }
   if (!tags || tags.length === 0) {
-    return next(new HttpError('Could not find tags for home', 404));
+    return next(new HttpError("Could not find tags for home", 404));
   }
   res.json({ tags: tags.map((post) => post.toObject({ getters: true })) });
 };
@@ -139,9 +144,9 @@ const followTag = async (req, res, next) => {
       userId,
       { $addToSet: { followedTags: tagId } },
       { new: true }
-    ).populate('followedTags');
+    ).populate("followedTags");
   } catch (err) {
-    return next(new HttpError('Could not follow tag', 500));
+    return next(new HttpError("Could not follow tag", 500));
   }
   res.status(200).json({
     tag: tag.toObject({ getters: true }),
@@ -163,9 +168,9 @@ const unfollowTag = async (req, res, next) => {
       userId,
       { $pull: { followedTags: tagId } },
       { new: true }
-    ).populate('followedTags');
+    ).populate("followedTags");
   } catch (err) {
-    return next(new HttpError('Could not unfollow tag', 500));
+    return next(new HttpError("Could not unfollow tag", 500));
   }
   res.status(200).json({
     tag: tag.toObject({ getters: true }),

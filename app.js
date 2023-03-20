@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const morgan = require('morgan');
 const mongoose = require('mongoose');
 const passport = require('passport');
 const cookieSession = require('cookie-session');
@@ -45,6 +46,10 @@ app.use(
     sameSite: NODE_ENV === 'development' ? false : 'none',
   })
 );
+
+
+
+app.use(morgan("dev"));
 
 app.use(bodyParser.json());
 
