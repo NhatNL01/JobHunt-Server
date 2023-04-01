@@ -1,11 +1,11 @@
-const jwt = require('jsonwebtoken');
-const DatauriParser = require('datauri/parser');
+const jwt = require("jsonwebtoken");
+const DatauriParser = require("datauri/parser");
 const parser = new DatauriParser();
 
-const path = require('path');
-require('dotenv').config();
+const path = require("path");
+require("dotenv").config();
 const { JWT_KEY } = process.env;
-const { cloudinary } = require('../config/cloudinary');
+const { cloudinary } = require("../config/cloudinary");
 
 const uploadToCloudinary = async (file) => {
   try {
@@ -13,7 +13,7 @@ const uploadToCloudinary = async (file) => {
     const file64 = parser.format(extName, file.buffer);
 
     const uploadedResponse = await cloudinary.uploader.upload(file64.content, {
-      upload_preset: 'JobHunt',
+      upload_preset: "JobHunt",
     });
     return uploadedResponse.url;
   } catch (err) {
@@ -28,7 +28,7 @@ const createJWTtoken = (id, email) => {
       //takes payload (the data you want to encode)
       { userId: id, email: email },
       JWT_KEY,
-      { expiresIn: '1h' } //token expires in 1 hr
+      { expiresIn: "10h" } //token expires in 1 hr
     );
   } catch (err) {
     console.log(err); //return err ('Signup failed, please try again', 500)

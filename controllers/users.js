@@ -100,7 +100,7 @@ const signup = async (req, res, next) => {
       //takes payload (the data you want to encode)
       { userId: createdUser.id, email: createdUser.email },
       JWT_KEY,
-      { expiresIn: "1h" } //token expires in 1 hr
+      { expiresIn: "10h" } //token expires in 10 hr
     );
   } catch (err) {
     return next(new HttpError("Signup failed, please try again", 500));
@@ -153,7 +153,7 @@ const login = async (req, res, next) => {
     // token = jwt.sign(
     //   { userId: existingUser.id, email: existingUser.email },
     //   JWT_KEY,
-    //   { expiresIn: '1h' }
+    //   { expiresIn: '10h' }
     // );
     token = createJWTtoken(existingUser.id, existingUser.email);
   } catch (err) {
@@ -233,7 +233,7 @@ const googleLogin = async (req, res, next) => {
       //takes payload (the data you want to encode)
       { userId: user.id, email: user.email },
       JWT_KEY,
-      { expiresIn: "1h" } //token expires in 1 hr
+      { expiresIn: "10h" } //token expires in 10 hr
     );
   } catch (err) {
     return next(new HttpError("Signup failed, please try again", 500));
