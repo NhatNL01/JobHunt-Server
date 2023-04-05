@@ -79,6 +79,25 @@ const getPostsByType = async (req, res, next) => {
   res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
 };
 
+const getPostsByTypeAndUserId = async (req, res, next) => {
+  const { userId } = req.params;
+  let posts;
+  try {
+    console.log(userId);
+    posts = await Post.find({ type: "job", author: userId }).sort({
+      date: "desc",
+    });
+    // .populate("tags");
+  } catch (err) {
+    return next(new HttpError("Fetching posts failed. Please try again", 500));
+  }
+  if (!posts || posts.length === 0) {
+    //forward the error to the middleware and stop execution
+    return next(new HttpError("Could not find posts for the user ID", 404));
+  }
+  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+};
+
 const createPost = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -364,6 +383,7 @@ exports.getAllPosts = getAllPosts;
 exports.getPostById = getPostById;
 exports.getPostsByType = getPostsByType;
 exports.getPostsByUserId = getPostsByUserId;
+exports.getPostsByTypeAndUserId = getPostsByTypeAndUserId;
 exports.createPost = createPost;
 exports.updatePost = updatePost;
 exports.deletePost = deletePost;

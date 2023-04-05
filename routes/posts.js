@@ -8,6 +8,7 @@ const {
   getAllPosts,
   getPostsByUserId,
   getPostsByType,
+  getPostsByTypeAndUserId,
   getPostById,
   getSearchResults,
   createPost,
@@ -26,6 +27,8 @@ router.get("/", getAllPosts);
 router.get("/user/:userId", getPostsByUserId);
 
 router.get("/type/:postType", getPostsByType);
+
+router.get("/type/job/user/:userId", getPostsByTypeAndUserId);
 
 router.get("/:titleURL/:postId", getPostById);
 
