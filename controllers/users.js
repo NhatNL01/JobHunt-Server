@@ -33,7 +33,8 @@ const getUserById = async (req, res, next) => {
           path: "tags",
         },
       })
-      .populate("followedTags");
+      .populate("followedTags")
+      .populate("company");
     //exclude password, i.e. return only name and email
   } catch (err) {
     return next(new HttpError("Getting user failed, please try again!", 500));
@@ -168,6 +169,7 @@ const login = async (req, res, next) => {
       token,
       bio: existingUser.bio,
       avatar: existingUser.avatar,
+      company: existingUser.company,
       tags: existingUser.followedTags,
     },
   });

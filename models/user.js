@@ -29,8 +29,7 @@ const userSchema = new Schema({
   following: [{ type: mongoose.Types.ObjectId, ref: "User" }],
   followers: [{ type: mongoose.Types.ObjectId, ref: "User" }],
   followedTags: [{ type: mongoose.Types.ObjectId, ref: "Tag" }],
-  bookmarkPosts: [{ type: mongoose.Types.ObjectId, ref: "Post" }],
-  bookmarkJobs: [{ type: mongoose.Types.ObjectId, ref: "Job" }],
+  bookmarks: [{ type: mongoose.Types.ObjectId, ref: "Post" }],
   company: { type: mongoose.Types.ObjectId, ref: "Company" },
 });
 

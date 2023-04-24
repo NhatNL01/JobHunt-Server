@@ -17,13 +17,6 @@ const tagSchema = new Schema({
       ref: "Post",
     },
   ],
-  jobs: [
-    {
-      type: mongoose.Types.ObjectId,
-      required: true,
-      ref: "Job",
-    },
-  ],
 });
 
 module.exports = mongoose.model("Tag", tagSchema);

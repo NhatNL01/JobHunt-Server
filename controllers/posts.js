@@ -5,6 +5,7 @@ const HttpError = require("../models/http-error");
 const Post = require("../models/post");
 const User = require("../models/user");
 const Tag = require("../models/tag");
+const Company = require("../models/company");
 const { uploadToCloudinary } = require("../utils");
 const { createTags, updateTags } = require("./tags");
 const {
@@ -13,16 +14,25 @@ const {
 } = require("../controllers/notifications");
 
 const getAllPosts = async (req, res, next) => {
+  const { page = 1, pageSize = 10 } = req.query;
   let posts;
   try {
     posts = await Post.find()
       .sort({ date: "desc" })
+      .skip((+page - 1) * +pageSize)
+      .limit(+pageSize)
       .populate("author")
       .populate("tags");
   } catch (err) {
     return next(new HttpError("Could not fetch posts, please try again", 500));
   }
-  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+  res.json({
+    posts: posts.map((post) => post.toObject({ getters: true })),
+    meta: {
+      page,
+      pageSize,
+    },
+  });
 };
 
 const getPostById = async (req, res, next) => {
@@ -62,21 +72,30 @@ const getPostsByUserId = async (req, res, next) => {
 };
 
 const getPostsByType = async (req, res, next) => {
+  const { page = 1, pageSize = 10 } = req.query;
   const { postType } = req.params;
   let posts;
   try {
     posts = await Post.find({ type: postType })
       .sort({ date: "desc" })
+      .skip((+page - 1) * +pageSize)
+      .limit(+pageSize)
       .populate("author")
       .populate("tags");
   } catch (err) {
     return next(new HttpError("Fetching posts failed. Please try again", 500));
   }
-  if (!posts || posts.length === 0) {
-    //forward the error to the middleware and stop execution
-    return next(new HttpError("Could not find posts for the user ID", 404));
-  }
-  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+  // if (!posts || posts.length === 0) {
+  //   //forward the error to the middleware and stop execution
+  //   return next(new HttpError("Could not find posts for the user ID", 404));
+  // }
+  res.json({
+    posts: posts.map((post) => post.toObject({ getters: true })),
+    meta: {
+      page,
+      pageSize,
+    },
+  });
 };
 
 const getPostsByTypeAndUserId = async (req, res, next) => {
@@ -95,6 +114,36 @@ const getPostsByTypeAndUserId = async (req, res, next) => {
     //forward the error to the middleware and stop execution
     return next(new HttpError("Could not find posts for the user ID", 404));
   }
+  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+};
+const getPostsByTypeAndUserIdsofCompanyId = async (req, res, next) => {
+  const { companyId } = req.params;
+  let posts;
+  let company;
+  try {
+    company = await Company.findById(companyId);
+
+    const { members } = company;
+
+    posts = await Post.find({
+      type: "job",
+      author: {
+        $in: members,
+      },
+    })
+      .sort({
+        date: "desc",
+      })
+      .populate("tags")
+      .populate("author");
+    // .populate("tags");
+  } catch (err) {
+    return next(new HttpError("Fetching posts failed. Please try again", 500));
+  }
+  // if (!posts || posts.length === 0) {
+  //   //forward the error to the middleware and stop execution
+  //   return next(new HttpError("Could not find posts for the user ID", 404));
+  // }
   res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
 };
 
@@ -336,7 +385,6 @@ const ununicornPost = async (req, res, next) => {
 };
 
 const getSearchResults = async (req, res, next) => {
-  console.log(req.query.type);
   const query = {};
   if (req.query.search && req.query.type) {
     const options = "$options";
@@ -384,6 +432,8 @@ exports.getPostById = getPostById;
 exports.getPostsByType = getPostsByType;
 exports.getPostsByUserId = getPostsByUserId;
 exports.getPostsByTypeAndUserId = getPostsByTypeAndUserId;
+exports.getPostsByTypeAndUserIdsofCompanyId =
+  getPostsByTypeAndUserIdsofCompanyId;
 exports.createPost = createPost;
 exports.updatePost = updatePost;
 exports.deletePost = deletePost;

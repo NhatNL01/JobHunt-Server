@@ -1,26 +1,29 @@
-const { v4: uuid } = require('uuid');
-const { validationResult } = require('express-validator');
-const mongoose = require('mongoose');
-const HttpError = require('../models/http-error');
-const Post = require('../models/post');
-const Job = require('../models/job');
-const User = require('../models/user');
-const Tag = require('../models/tag');
-const Company = require('../models/company');
-const { uploadToCloudinary } = require('../utils');
-const { createTags, updateTags } = require('./tags');
-const company = require('../models/company');
+const { v4: uuid } = require("uuid");
+const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
+const HttpError = require("../models/http-error");
+const Post = require("../models/post");
+const Job = require("../models/job");
+const User = require("../models/user");
+const Tag = require("../models/tag");
+const Company = require("../models/company");
+const { uploadToCloudinary } = require("../utils");
+const { createTags, updateTags } = require("./tags");
+const company = require("../models/company");
 
 //ok
 const getAllCompanies = async (req, res, next) => {
   let companies;
   try {
-    companies = await Company.find()
-      .populate('members');
+    companies = await Company.find();
   } catch (err) {
-    return next(new HttpError('Could not fetch companies, please try again', 500));
+    return next(
+      new HttpError("Could not fetch companies, please try again", 500)
+    );
   }
-  res.json({ companies: companies.map((company) => company.toObject({ getters: true })) });
+  res.json({
+    companies: companies.map((company) => company.toObject({ getters: true })),
+  });
 };
 //ok
 const getCompanyById = async (req, res, next) => {
@@ -31,10 +34,12 @@ const getCompanyById = async (req, res, next) => {
     //findById works directly on the contructor fn
   } catch (err) {
     //stop execution in case of error
-    return next(new HttpError('Something went wrong with the server', 500));
+    return next(new HttpError("Something went wrong with the server", 500));
   }
   if (!company) {
-    return next(new HttpError('Could not find company for the provided ID', 404));
+    return next(
+      new HttpError("Could not find company for the provided ID", 404)
+    );
   }
   //company is a special mongoose obj; convert it to normal JS obj using toObject
   //get rid of "_" in "_id" using { getters: true }
@@ -45,26 +50,19 @@ const getCompanyById = async (req, res, next) => {
 const createCompany = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(new HttpError('Invalid inputs passed, please try again!', 422));
+    return next(new HttpError("Invalid inputs passed, please try again!", 422));
   }
   const imageUrl = await uploadToCloudinary(req.file);
-  const {
-    name,
-    description,
-    foundedYear,
-    scale,
-    address,
-    contact,
-    author
-  } = req.body;
+  const { name, description, foundedYear, scale, address, contact, author } =
+    req.body;
   let user;
   try {
     user = await User.findById(author); //check if the user ID exists
   } catch (err) {
-    return next(new HttpError('Creating post failed, please try again', 500));
+    return next(new HttpError("Creating post failed, please try again", 500));
   }
   if (!user) {
-    return next(new HttpError('Could not find user for provided ID', 404));
+    return next(new HttpError("Could not find user for provided ID", 404));
   }
   const createdCompany = await Company.create({
     name,
@@ -74,9 +72,8 @@ const createCompany = async (req, res, next) => {
     address,
     contact,
     avatar: imageUrl,
-    members: [author]
+    members: [author],
   });
-
 
   //2 operations to execute:
   //1. save new doc with the new post
@@ -88,24 +85,24 @@ const createCompany = async (req, res, next) => {
     const sess = await mongoose.startSession(); //start session
     sess.startTransaction(); //start transaction
     await createdCompany.save({ session: sess }); //save new doc with the new post
-    user.company = createdCompany;  //add post id to the corresponding user
+    user.company = createdCompany; //add post id to the corresponding user
     //(BTS: MongoDB grabs just the post id and adds it to the "posts" array in the "user" doc)
     await user.save({ session: sess }); //save the updated user (part of our current session)
     await sess.commitTransaction(); //session commits the transaction
     //only at this point, the changes are saved in DB... anything goes wrong, EVERYTHING is undone by MongoDB
   } catch (err) {
-    return next(new HttpError('Creating post failed, please try again', 500));
+    return next(new HttpError("Creating post failed, please try again", 500));
   }
   res.status(201).json({
-    company: createdCompany.populate('members').toObject({ getters: true }),
+    company: createdCompany.populate("members").toObject({ getters: true }),
   });
 };
 
-//ok, 
+//ok,
 const addMenberToCompany = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(new HttpError('Invalid inputs passed, please try again!', 422));
+    return next(new HttpError("Invalid inputs passed, please try again!", 422));
   }
   const { companyId, memberId } = req.params;
   const { body } = req;
@@ -121,12 +118,14 @@ const addMenberToCompany = async (req, res, next) => {
     company = await Company.findById(companyId);
     member = await User.findById(memberId);
   } catch (err) {
-    return next(new HttpError('Could not add member to company, please try again!', 500));
+    return next(
+      new HttpError("Could not add member to company, please try again!", 500)
+    );
   }
 
-  // if (company.author.toString() !== req.body.author) {
-  //   return next(new HttpError('You are not allowed to update the company', 401));
-  // }
+  if (member.company) {
+    return next(new HttpError("This user has had company", 401));
+  }
 
   company.members.push(memberId);
   member.company = companyId;
@@ -142,15 +141,15 @@ const addMenberToCompany = async (req, res, next) => {
       company: company.toObject({ getters: true }),
     });
   } catch (err) {
-    return next(new HttpError('Could not add member to company', 500));
+    return next(new HttpError("Could not add member to company", 500));
   }
 };
 
-//ok 
+//ok
 const updateCompany = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(new HttpError('Invalid inputs passed, please try again!', 422));
+    return next(new HttpError("Invalid inputs passed, please try again!", 422));
   }
   const { companyId } = req.params;
   const { body } = req;
@@ -159,7 +158,9 @@ const updateCompany = async (req, res, next) => {
   try {
     company = await Company.findById(companyId);
   } catch (err) {
-    return next(new HttpError('Could not update company, please try again!', 500));
+    return next(
+      new HttpError("Could not update company, please try again!", 500)
+    );
   }
 
   // if (company.members.find(member => {
@@ -178,23 +179,25 @@ const updateCompany = async (req, res, next) => {
       company: company.toObject({ getters: true }),
     });
   } catch (err) {
-    return next(new HttpError('Could not update company', 500));
+    return next(new HttpError("Could not update company", 500));
   }
 };
-//ok 
+//ok
 const deleteCompany = async (req, res, next) => {
   const { companyId } = req.params;
   let company;
   try {
     //"populate" allows us to refer to another collection and work with it
     //works only if "ref" property is there in the model
-    company = await Company.findById(companyId).populate('members');
+    company = await Company.findById(companyId).populate("members");
   } catch (err) {
-    return next(new HttpError('Could not delete company.', 500));
+    return next(new HttpError("Could not delete company.", 500));
   }
 
   if (!company) {
-    return next(new HttpError('Could not find company for the provided ID.', 404));
+    return next(
+      new HttpError("Could not find company for the provided ID.", 404)
+    );
   }
   // if (company.author.id !== req.body.author) {
   //   return next(new HttpError('You are not allowed to delete the company', 401));
@@ -204,7 +207,7 @@ const deleteCompany = async (req, res, next) => {
     const sess = await mongoose.startSession(); //start session
     sess.startTransaction(); //start transaction
     await company.remove({ session: sess }); //remove doc; make sure we refer to the current session
-    company.members.forEach(async member => {
+    company.members.forEach(async (member) => {
       member.company = null;
       await member.save({ session: sess });
     });
@@ -213,32 +216,33 @@ const deleteCompany = async (req, res, next) => {
     await sess.commitTransaction(); //session commits the transaction
     //only at this point, the changes are saved in DB... anything goes wrong, EVERYTHING is undone by MongoDB
   } catch (err) {
-    return next(new HttpError('Deleting company failed, please try again', 500));
+    return next(
+      new HttpError("Deleting company failed, please try again", 500)
+    );
   }
-  res.status(201).json({ message: 'Deleted company' });
+  res.status(201).json({ message: "Deleted company" });
 };
-
 
 const getSearchResults = async (req, res, next) => {
   const query = {};
   if (req.query.search) {
-    const options = '$options';
-    query.name = { $regex: req.query.search, [options]: 'i' };
+    const options = "$options";
+    query.name = { $regex: req.query.search, [options]: "i" };
     let companies;
     try {
-      companies = await Company.find(query)
-        //.populate('author')
-        //.populate('tags')
-        ;
+      companies = await Company.find(query);
+      //.populate('author')
+      //.populate('tags')
     } catch (err) {
-      return next(new HttpError('Search failed, please try again', 400));
+      return next(new HttpError("Search failed, please try again", 400));
     }
-    res
-      .status(201)
-      .json({ companies: companies.map((company) => company.toObject({ getters: true })) });
+    res.status(201).json({
+      companies: companies.map((company) =>
+        company.toObject({ getters: true })
+      ),
+    });
   }
 };
-
 
 exports.getAllCompanies = getAllCompanies;
 exports.getCompanyById = getCompanyById;

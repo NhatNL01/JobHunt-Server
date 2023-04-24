@@ -31,7 +31,9 @@ const getApplicationById = async (req, res, next) => {
   const { applicationId } = req.params;
   let application;
   try {
-    application = await Application.findById(applicationId).populate("author");
+    application = await Application.findById(applicationId)
+      .populate("author")
+      .populate("job");
     //findById works directly on the contructor fn
   } catch (err) {
     //stop execution in case of error
@@ -51,9 +53,10 @@ const getApplicationsByUserId = async (req, res, next) => {
   const { userId } = req.params;
   let applications;
   try {
-    applications = await Application.find({ author: userId }).populate(
-      "author"
-    );
+    applications = await Application.find({ author: userId })
+      .populate("author")
+      .populate("job")
+      .populate("cv");
   } catch (err) {
     return next(
       new HttpError("Fetching applications failed. Please try again", 500)
