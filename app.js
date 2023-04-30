@@ -4,7 +4,6 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
-const passport = require("passport");
 const cookieSession = require("cookie-session");
 const path = require("path");
 const { createServer } = require("http");
@@ -41,7 +40,7 @@ app.use(
   cookieSession({
     name: "session",
     keys: [COOKIE_KEY],
-    maxAge: 24 * 60 * 60 * 1000, // session will expire after 24 hours
+    maxAge: 24 * 60 * 60 * 1000,
     secure: NODE_ENV === "development" ? false : true,
     sameSite: NODE_ENV === "development" ? false : "none",
   })
@@ -50,10 +49,6 @@ app.use(
 app.use(morgan("dev"));
 
 app.use(bodyParser.json());
-
-app.use(passport.initialize());
-app.use(passport.session());
-require("./config/passport-twitter");
 
 const io = new Server(httpServer, {
   cors: {
