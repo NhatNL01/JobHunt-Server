@@ -14,6 +14,20 @@ const {
 } = require("../controllers/notifications");
 
 const getAllPosts = async (req, res, next) => {
+  let posts;
+  try {
+    posts = await Post.find()
+      .sort({ date: "desc" })
+      .populate("author")
+      .populate("tags");
+  } catch (err) {
+    return next(new HttpError("Could not fetch posts, please try again", 500));
+  }
+  res.json({
+    posts: posts.map((post) => post.toObject({ getters: true })),
+  });
+};
+const getAllPostsPaginate = async (req, res, next) => {
   const { page = 1, pageSize = 10 } = req.query;
   let posts;
   try {
@@ -247,9 +261,9 @@ const deletePost = async (req, res, next) => {
   if (!post) {
     return next(new HttpError("Could not find post for the provided ID.", 404));
   }
-  if (post.author.id !== req.body.author) {
-    return next(new HttpError("You are not allowed to delete the post", 401));
-  }
+  // if (post.author.id !== req.body.author) {
+  //   return next(new HttpError("You are not allowed to delete the post", 401));
+  // }
 
   try {
     const sess = await mongoose.startSession(); //start session
@@ -428,6 +442,7 @@ const getBookmarks = async (req, res, next) => {
 };
 
 exports.getAllPosts = getAllPosts;
+exports.getAllPostsPaginate = getAllPostsPaginate;
 exports.getPostById = getPostById;
 exports.getPostsByType = getPostsByType;
 exports.getPostsByUserId = getPostsByUserId;

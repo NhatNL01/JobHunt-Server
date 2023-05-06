@@ -10,6 +10,7 @@ require("dotenv").config;
 const { CLIENT_URL } = process.env;
 
 const {
+  getAllUsers,
   getUserById,
   signup,
   login,
@@ -48,6 +49,8 @@ router.get("/auth/twitter/logout", twitterLogout);
 router.post("/login", login);
 
 router.use(checkAuth);
+
+router.get("/", getAllUsers);
 
 router.get("/:userId/notifications", getAllNotifications);
 

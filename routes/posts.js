@@ -6,6 +6,7 @@ const postsControllers = require("../controllers/posts");
 const router = express.Router();
 const {
   getAllPosts,
+  getAllPostsPaginate,
   getPostsByUserId,
   getPostsByType,
   getPostsByTypeAndUserId,
@@ -23,7 +24,9 @@ const {
   bookmarkPost,
 } = postsControllers;
 
-router.get("/", getAllPosts);
+router.get("/", getAllPostsPaginate);
+
+router.get("/all", getAllPosts);
 
 router.get("/user/:userId", getPostsByUserId);
 

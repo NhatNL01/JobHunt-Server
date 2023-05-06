@@ -17,6 +17,27 @@ const {
 } = require("../controllers/notifications");
 const { uploadToCloudinary } = require("../utils");
 
+const getAllUsers = async (req, res, next) => {
+  let users;
+  try {
+    users = await User.find();
+    // .populate({
+    //   path: "posts",
+    //   populate: {
+    //     path: "tags",
+    //   },
+    // })
+    // .populate("followedTags")
+    // .populate("company");
+    //exclude password, i.e. return only name and email
+  } catch (err) {
+    return next(new HttpError("Getting user failed, please try again!", 500));
+  }
+  res.status(200).json({
+    users: users.map((user) => user.toObject({ getters: true })),
+  });
+};
+
 const getUserById = async (req, res, next) => {
   let { userId } = req.params;
   let user;
@@ -308,6 +329,7 @@ const registerRecruiter = async (req, res, next) => {
   }
 };
 
+exports.getAllUsers = getAllUsers;
 exports.getUserById = getUserById;
 exports.signup = signup;
 exports.login = login;
