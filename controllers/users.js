@@ -164,6 +164,10 @@ const login = async (req, res, next) => {
     return next(new HttpError("Invalid credentials, login failed!", 401));
   }
 
+  if (!existingUser.active) {
+    return next(new HttpError("Your account is locked, login failed!", 401));
+  }
+
   //everything ok => generate token
   let token;
   try {
@@ -329,6 +333,56 @@ const registerRecruiter = async (req, res, next) => {
   }
 };
 
+const lockUser = async (req, res, next) => {
+  const { userId } = req.params;
+
+  let user;
+  try {
+    user = User.findByIdAndUpdate(
+      userId,
+      { active: false },
+      { new: true },
+      (err, data) => {
+        if (err) {
+          return next(new HttpError("Could not find user to lock", 500));
+        } else {
+          const { name, id: userId, bio, email, avatar, role } = data;
+          res
+            .status(200)
+            .json({ user: { name, userId, bio, email, avatar, role } });
+        }
+      }
+    );
+  } catch (err) {
+    return next(new HttpError("Could not lock user", 500));
+  }
+};
+
+const unLockUser = async (req, res, next) => {
+  const { userId } = req.params;
+
+  let user;
+  try {
+    user = User.findByIdAndUpdate(
+      userId,
+      { active: true },
+      { new: true },
+      (err, data) => {
+        if (err) {
+          return next(new HttpError("Could not find user to unlock", 500));
+        } else {
+          const { name, id: userId, bio, email, avatar, role } = data;
+          res
+            .status(200)
+            .json({ user: { name, userId, bio, email, avatar, role } });
+        }
+      }
+    );
+  } catch (err) {
+    return next(new HttpError("Could not unlock user", 500));
+  }
+};
+
 exports.getAllUsers = getAllUsers;
 exports.getUserById = getUserById;
 exports.signup = signup;
@@ -343,3 +397,5 @@ exports.updateUser = updateUser;
 exports.followUser = followUser;
 exports.unfollowUser = unfollowUser;
 exports.registerRecruiter = registerRecruiter;
+exports.lockUser = lockUser;
+exports.unLockUser = unLockUser;

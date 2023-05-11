@@ -21,6 +21,11 @@ const userSchema = new Schema({
     enum: ["user", "recruiter", "admin"],
     required: true,
   },
+  active: {
+    type: Boolean,
+    required: true,
+    default: true,
+  },
 
   posts: [{ type: mongoose.Types.ObjectId, ref: "Post" }],
   cvs: [{ type: mongoose.Types.ObjectId, ref: "Cv" }],

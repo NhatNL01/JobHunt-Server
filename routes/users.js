@@ -21,6 +21,8 @@ const {
   followUser,
   unfollowUser,
   registerRecruiter,
+  lockUser,
+  unLockUser,
 } = usersControllers;
 const { getAllNotifications } = notificationsControllers;
 const { getBookmarks } = postsControllers;
@@ -68,5 +70,9 @@ router.put("/follow", followUser);
 router.put("/unfollow", unfollowUser);
 
 router.patch("/:userId/registerRecruiter", registerRecruiter);
+
+router.patch("/:userId/lock", lockUser);
+
+router.patch("/:userId/unlock", unLockUser);
 
 module.exports = router;

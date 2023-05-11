@@ -12,6 +12,7 @@ const {
   getTagById,
   followTag,
   unfollowTag,
+  deleteTag,
 } = tagsControllers;
 
 router.get("/", getAllTags);
@@ -27,5 +28,7 @@ router.use(checkAuth);
 router.put("/:tagId/follow", followTag);
 
 router.put("/:tagId/unfollow", unfollowTag);
+
+router.delete("/:tagId", deleteTag);
 
 module.exports = router;

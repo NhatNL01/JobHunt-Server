@@ -40,6 +40,41 @@ const updateTags = async (tags, post) => {
   await removeTags(tags, post);
 };
 
+const deleteTag = async (req, res, next) => {
+  const { tagId } = req.params;
+  let tag;
+  try {
+    //"populate" allows us to refer to another collection and work with it
+    //works only if "ref" property is there in the model
+    tag = await Tag.findById(tagId).populate("posts");
+  } catch (err) {
+    return next(new HttpError("Could not delete tag.", 500));
+  }
+
+  if (!tag) {
+    return next(new HttpError("Could not find tag for the provided ID.", 404));
+  }
+  // if (tag.author.id !== req.body.author) {
+  //   return next(new HttpError("You are not allowed to delete the tag", 401));
+  // }
+
+  try {
+    const sess = await mongoose.startSession(); //start session
+    sess.startTransaction(); //start transaction
+    await tag.remove({ session: sess }); //remove doc; make sure we refer to the current session
+    for (let index = 0; index < tag.posts.length; index++) {
+      tag.posts[index].tags.pull(tag);
+    }
+    // tag.post.tags.pull(tag); //remove post id from the corresponding user
+    await tag.posts.save({ session: sess }); //save the updated user (part of our current session)
+    await sess.commitTransaction(); //session commits the transaction
+    //only at this point, the changes are saved in DB... anything goes wrong, EVERYTHING is undone by MongoDB
+  } catch (err) {
+    return next(new HttpError("Deleting tag failed, please try again", 500));
+  }
+  res.status(201).json({ message: "Deleted tag" });
+};
+
 const getAllTags = async (req, res, next) => {
   let tags;
   try {
@@ -187,3 +222,4 @@ exports.getTagByName = getTagByName;
 exports.getPostsForHomeTags = getPostsForHomeTags;
 exports.followTag = followTag;
 exports.unfollowTag = unfollowTag;
+exports.deleteTag = deleteTag;

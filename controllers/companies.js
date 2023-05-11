@@ -53,17 +53,16 @@ const createCompany = async (req, res, next) => {
     return next(new HttpError("Invalid inputs passed, please try again!", 422));
   }
   const imageUrl = await uploadToCloudinary(req.file);
-  const { name, description, foundedYear, scale, address, contact, author } =
-    req.body;
-  let user;
-  try {
-    user = await User.findById(author); //check if the user ID exists
-  } catch (err) {
-    return next(new HttpError("Creating post failed, please try again", 500));
-  }
-  if (!user) {
-    return next(new HttpError("Could not find user for provided ID", 404));
-  }
+  const { name, description, foundedYear, scale, address, contact } = req.body;
+  // let user;
+  // try {
+  //   user = await User.findById(author); //check if the user ID exists
+  // } catch (err) {
+  //   return next(new HttpError("Creating post failed, please try again", 500));
+  // }
+  // if (!user) {
+  //   return next(new HttpError("Could not find user for provided ID", 404));
+  // }
   const createdCompany = await Company.create({
     name,
     description,
@@ -72,7 +71,6 @@ const createCompany = async (req, res, next) => {
     address,
     contact,
     avatar: imageUrl,
-    members: [author],
   });
 
   //2 operations to execute:
@@ -81,18 +79,18 @@ const createCompany = async (req, res, next) => {
   //execute multiple indirectly related operations such that if one fails, we undo all operations: transcations
   //transcations are built on "sessions"
 
-  try {
-    const sess = await mongoose.startSession(); //start session
-    sess.startTransaction(); //start transaction
-    await createdCompany.save({ session: sess }); //save new doc with the new post
-    user.company = createdCompany; //add post id to the corresponding user
-    //(BTS: MongoDB grabs just the post id and adds it to the "posts" array in the "user" doc)
-    await user.save({ session: sess }); //save the updated user (part of our current session)
-    await sess.commitTransaction(); //session commits the transaction
-    //only at this point, the changes are saved in DB... anything goes wrong, EVERYTHING is undone by MongoDB
-  } catch (err) {
-    return next(new HttpError("Creating post failed, please try again", 500));
-  }
+  // try {
+  //   const sess = await mongoose.startSession(); //start session
+  //   sess.startTransaction(); //start transaction
+  //   await createdCompany.save({ session: sess }); //save new doc with the new post
+  //   user.company = createdCompany; //add post id to the corresponding user
+  //   //(BTS: MongoDB grabs just the post id and adds it to the "posts" array in the "user" doc)
+  //   await user.save({ session: sess }); //save the updated user (part of our current session)
+  //   await sess.commitTransaction(); //session commits the transaction
+  //   //only at this point, the changes are saved in DB... anything goes wrong, EVERYTHING is undone by MongoDB
+  // } catch (err) {
+  //   return next(new HttpError("Creating post failed, please try again", 500));
+  // }
   res.status(201).json({
     company: createdCompany.populate("members").toObject({ getters: true }),
   });
