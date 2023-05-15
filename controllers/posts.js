@@ -20,6 +20,14 @@ const getAllPosts = async (req, res, next) => {
       .sort({ date: "desc" })
       .populate("author")
       .populate("tags");
+
+    // posts.sort((a, b) => {
+    //   const interactionA =
+    //     a.likes.length + a.comments.length + a.bookmarks.length;
+    //   const interactionB =
+    //     b.likes.length + b.comments.length + b.bookmarks.length;
+    //   return interactionB - interactionA;
+    // });
   } catch (err) {
     return next(new HttpError("Could not fetch posts, please try again", 500));
   }
@@ -86,16 +94,25 @@ const getPostsByUserId = async (req, res, next) => {
 };
 
 const getPostsByType = async (req, res, next) => {
-  const { page = 1, pageSize = 10 } = req.query;
+  const { page = 1, pageSize = 10, filter = "latest" } = req.query;
   const { postType } = req.params;
   let posts;
   try {
     posts = await Post.find({ type: postType })
       .sort({ date: "desc" })
-      .skip((+page - 1) * +pageSize)
-      .limit(+pageSize)
+      .skip(filter == "top" ? 0 : (+page - 1) * +pageSize)
+      .limit(filter == "top" ? 0 : +pageSize)
       .populate("author")
       .populate("tags");
+    if (filter == "top") {
+      posts.sort((a, b) => {
+        const interactionA =
+          a.likes.length + a.comments.length + a.bookmarks.length;
+        const interactionB =
+          b.likes.length + b.comments.length + b.bookmarks.length;
+        return interactionB - interactionA;
+      });
+    }
   } catch (err) {
     return next(new HttpError("Fetching posts failed. Please try again", 500));
   }
@@ -400,7 +417,7 @@ const ununicornPost = async (req, res, next) => {
 
 const getSearchResults = async (req, res, next) => {
   const query = {};
-  if (req.query.search && req.query.type) {
+  if (req.query.search) {
     const options = "$options";
     query.title = {
       $regex: req.query.search,
@@ -408,15 +425,26 @@ const getSearchResults = async (req, res, next) => {
     };
     let posts;
     try {
-      posts = await Post.find({
-        title: {
-          $regex: req.query.search,
-          [options]: "i",
-        },
-        type: req.query.type.trim(),
-      })
-        .populate("author")
-        .populate("tags");
+      if (req.query.type) {
+        posts = await Post.find({
+          title: {
+            $regex: req.query.search,
+            [options]: "i",
+          },
+          type: req.query.type.trim(),
+        })
+          .populate("author")
+          .populate("tags");
+      } else {
+        posts = await Post.find({
+          title: {
+            $regex: req.query.search,
+            [options]: "i",
+          },
+        })
+          .populate("author")
+          .populate("tags");
+      }
     } catch (err) {
       return next(new HttpError("Search failed, please try again", 400));
     }

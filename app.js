@@ -17,6 +17,7 @@ const postsRoutes = require("./routes/posts");
 const usersRoutes = require("./routes/users");
 const commentsRoutes = require("./routes/comments");
 const messagesRoutes = require("./routes/messages");
+const roomsRoutes = require("./routes/rooms");
 const tagsRoutes = require("./routes/tags");
 const applicationsRoutes = require("./routes/applications");
 const HttpError = require("./models/http-error");
@@ -84,6 +85,8 @@ app.use("/api/comments", commentsRoutes);
 app.use("/api/tags", tagsRoutes);
 
 app.use("/api/messages", messagesRoutes);
+
+app.use("/api/rooms", roomsRoutes);
 
 app.get("/", (req, res) => {
   res.send("JobHunt is running");

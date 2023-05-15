@@ -24,23 +24,23 @@ const findConnectedUser = (userId) => {
 };
 
 const socketHandlers = (io) => {
-  return io.on('connection', (socket) => {
-    socket.on('join', async ({ userId }) => {
+  return io.on("connection", (socket) => {
+    socket.on("join", async ({ userId }) => {
       const users = await addUser(userId, socket.id);
 
       setInterval(() => {
         //sending back users other than logged in users
-        socket.emit('connectedUsers', {
+        socket.emit("connectedUsers", {
           users: users.filter((user) => user.id !== userId),
         });
       }, 10000);
     });
 
-    socket.on('like', async ({ postId, sender, receiver, like }) => {
+    socket.on("like", async ({ postId, sender, receiver, like }) => {
       if (sender && receiver.id !== sender.userId) {
         const receiverSocket = findConnectedUser(receiver.id);
         if (receiverSocket && like) {
-          io.to(receiverSocket.socketId).emit('notificationReceived', {
+          io.to(receiverSocket.socketId).emit("notificationReceived", {
             postId,
             senderName: sender.name,
             receiverName: receiver.name,
@@ -50,11 +50,11 @@ const socketHandlers = (io) => {
       }
     });
 
-    socket.on('comment', async ({ postId, sender, receiver }) => {
+    socket.on("comment", async ({ postId, sender, receiver }) => {
       if (sender && receiver.id !== sender.userId) {
         const receiverSocket = findConnectedUser(receiver.id);
         if (receiverSocket) {
-          io.to(receiverSocket.socketId).emit('notificationReceived', {
+          io.to(receiverSocket.socketId).emit("notificationReceived", {
             postId,
             senderName: sender.name,
             receiverName: receiver.name,
@@ -66,11 +66,25 @@ const socketHandlers = (io) => {
       }
     });
 
-    socket.on('follow', async ({ sender, receiver }) => {
+    socket.on("chat", async ({ roomId, sender, text }) => {
+      if (sender) {
+        // const receiverSocket = findConnectedUser(receiver.id);
+        // if (receiverSocket) {
+        io.emit("chatReceived", {
+          roomId,
+          sender,
+          text,
+          date: new Date().toISOString(),
+        });
+        // }
+      }
+    });
+
+    socket.on("follow", async ({ sender, receiver }) => {
       if (sender && receiver.id !== sender.userId) {
         const receiverSocket = findConnectedUser(receiver.id);
         if (receiverSocket) {
-          io.to(receiverSocket.socketId).emit('notificationReceived', {
+          io.to(receiverSocket.socketId).emit("notificationReceived", {
             senderName: sender.name,
             receiverName: receiver.name,
             receiverId: receiver.id,
@@ -80,7 +94,7 @@ const socketHandlers = (io) => {
         }
       }
     });
-    socket.on('disconnect', () => {
+    socket.on("disconnect", () => {
       removeUser(socket.id);
     });
   });

@@ -2,13 +2,13 @@ const express = require("express");
 const router = express.Router();
 const { check } = require("express-validator");
 const { checkAuth } = require("../middleware/check-auth");
-const messagesControllers = require("../controllers/messages");
-const { getMessagesByRoomId, createMessage } = messagesControllers;
+const roomsControllers = require("../controllers/rooms");
+const { getRoomsByUserId, createRoom } = roomsControllers;
 
 router.use(checkAuth);
 
-router.get("/:roomId", getMessagesByRoomId);
+router.get("/:userId", getRoomsByUserId);
 
-router.post("/", createMessage);
+router.post("/", createRoom);
 
 module.exports = router;

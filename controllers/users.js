@@ -7,6 +7,7 @@ const { GOOGLE_API_KEY, JWT_KEY } = process.env;
 const HttpError = require("../models/http-error");
 const User = require("../models/user");
 const Post = require("../models/post");
+const Room = require("../models/room");
 const { createJWTtoken } = require("../utils");
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/drkvr9wta/image/upload/v1647701003/undraw_profile_pic_ic5t_ncxyyo.png";
@@ -16,6 +17,7 @@ const {
   removeFollowNotification,
 } = require("../controllers/notifications");
 const { uploadToCloudinary } = require("../utils");
+const room = require("../models/room");
 
 const getAllUsers = async (req, res, next) => {
   let users;
@@ -122,6 +124,11 @@ const signup = async (req, res, next) => {
   } catch (err) {
     return next(new HttpError("Signup failed, please try again", 500));
   }
+  const createdRoom = await Room.create({
+    name: "Room chat with Admin",
+    description: "Room chat with Admin",
+    members: [createdUser.id, "64531dd229d89f212c8bae30"],
+  });
 
   res.status(201).json({
     user: {
