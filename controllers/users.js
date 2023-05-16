@@ -124,10 +124,15 @@ const signup = async (req, res, next) => {
   } catch (err) {
     return next(new HttpError("Signup failed, please try again", 500));
   }
-  const createdRoom = await Room.create({
+  await Room.create({
     name: "Room chat with Admin",
     description: "Room chat with Admin",
     members: [createdUser.id, "64531dd229d89f212c8bae30"],
+  });
+  await Room.create({
+    name: "Room chat with JobHunt GPT",
+    description: "Room chat with JobHunt GPT",
+    members: [createdUser.id, "646320b2e2dbf52fcc3ba8d9"],
   });
 
   res.status(201).json({
