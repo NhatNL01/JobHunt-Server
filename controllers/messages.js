@@ -41,7 +41,7 @@ const createMessageChatGPT = async (req, res, next) => {
   const { text, sender, roomId } = req.body;
   const openai = new OAI.OpenAIApi(
     new OAI.Configuration({
-      apiKey: "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",
+      apiKey: process.env.GPT_API_KEY,
     })
   );
 
