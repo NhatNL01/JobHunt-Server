@@ -41,33 +41,30 @@ const createMessageChatGPT = async (req, res, next) => {
   const { text, sender, roomId } = req.body;
   const openai = new OAI.OpenAIApi(
     new OAI.Configuration({
-      apiKey: "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",
+      apiKey: "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",
     })
   );
 
-  // let prevMessage = await Message.findOne({
-  //   roomId: roomId,
-  // }).sort({
-  //   date: "desc",
-  // });
+  let prevMessage = await Message.findOne({
+    roomId: roomId,
+  }).sort({
+    date: "desc",
+  });
 
   let resText = "";
-  // if (prevMessage) {
-  //   await openai
-  //     .createEdit({
-  //       model: "text-davinci-edit-001",
-  //       input: prevMessage.text,
-  //       instruction: text,
-  //     })
-  //     .then((res) => {
-  //       console.log(res.data.choices[0].text);
-  //       resText = res.data.choices[0].text;
-  //     });
-  // } else {
   await openai
     .createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
+        {
+          role: "system",
+          content:
+            "Your name is JobHunt GPT Bot, created by NhatNL, you are a supporter in job search website. This Bot knows everything in the World. You will interact and respond to all user messages about job Recruiment field.",
+        },
+        {
+          role: "system",
+          content: `Your previous answer to user is "${prevMessage}"`,
+        },
         {
           role: "user",
           content: text,
@@ -75,7 +72,6 @@ const createMessageChatGPT = async (req, res, next) => {
       ],
     })
     .then((res) => {
-      // console.log(res.data.choices[0].message.content);
       resText = res.data.choices[0].message.content;
     });
   // }

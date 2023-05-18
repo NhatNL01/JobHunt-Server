@@ -16,7 +16,6 @@ const fileUpload = multer({
   limits: 500000,
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    console.log(file.mimetype);
     const isValid = !!MIME_TYPE_MAP[file.mimetype];
     let error = isValid ? null : new Error("Invalid mime type!");
     cb(error, isValid);

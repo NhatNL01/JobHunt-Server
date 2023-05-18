@@ -59,7 +59,6 @@ const createCv = async (req, res, next) => {
   if (!errors.isEmpty()) {
     return next(new HttpError("Invalid inputs passed, please try again!", 422));
   }
-  console.log(req.file);
   const imageUrl = await uploadToCloudinary(req.file);
   const { name, author } = req.body;
   let user;
